@@ -11,7 +11,7 @@
  * as "Not Available" in the UI. Nothing here invents data.
  */
 
-import { classifyIp, continentName } from "./ip";
+import { classifyIp, continentName, reverseDnsName } from "./ip";
 
 export interface IpIntel {
   ip: string;
@@ -20,6 +20,7 @@ export interface IpIntel {
   isPublic: boolean;
   classificationNote: string | null;
   hostname: string | null;
+  reverseDns: string | null;
   asn: string | null;
   asnOrg: string | null;
   org: string | null;
@@ -62,6 +63,7 @@ function emptyIntel(ip: string, provider: string): IpIntel {
     isPublic: cls?.isPublic ?? false,
     classificationNote: cls && !cls.isPublic ? cls.explanation : null,
     hostname: NA,
+    reverseDns: NA,
     asn: NA,
     asnOrg: NA,
     org: NA,
@@ -178,6 +180,22 @@ const HOSTING_HINTS = [
 
 /** Merge ipwho.is enrichment (security/connection) into a primary result. */
 async function enrich(intel: IpIntel): Promise<IpIntel> {
+  // Reverse DNS (PTR) via Cloudflare DNS-over-HTTPS — a fixed provider host,
+  // queried with the validated reverse-zone name, never a user-supplied URL.
+  try {
+    const ptrName = reverseDnsName(intel.ip);
+    if (ptrName) {
+      const ptr = await fetchJson(
+        `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(ptrName)}&type=PTR`,
+        { headers: { Accept: "application/dns-json" } }
+      );
+      const answer = Array.isArray(ptr?.Answer) ? ptr.Answer.find((a: any) => a?.type === 12) : null;
+      if (answer?.data) intel.reverseDns = String(answer.data).replace(/\.$/, "");
+    }
+  } catch {
+    // PTR is enrichment only; absence stays Not Available.
+  }
+
   try {
     const extra = await fromIpwho(intel.ip);
     intel.proxy = intel.proxy ?? extra.proxy;

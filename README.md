@@ -35,7 +35,12 @@ Most IP checkers stop at “your IP is …”. **IP Intelligence** goes further:
 | Area | What it does |
 |---|---|
 | ⚡ **Instant My-IP detection** | Shows your public IP, country, city, ISP and ASN as soon as the page loads |
+| 🌐 **IPv4 + IPv6 connectivity** | Detects each family separately and reports “Not detected” honestly when unavailable |
 | 🔎 **IPv4 + IPv6 lookup** | Strict validation, clear errors, shareable `?ip=` URLs |
+| ⚖️ **IP comparison** | Two addresses side by side with differences highlighted |
+| 🛡️ **Privacy & Leak Tests** | WebRTC, DNS resolver diagnostics, IPv6, VPN/proxy indicators, timezone consistency |
+| 📊 **Privacy Score** | Transparent 0–100 weighted score; inconclusive tests are excluded, never scored as zero |
+| 🧬 **Browser Fingerprint Lab** | Canvas, WebGL, audio, hardware, screen and permission signals — measured locally only |
 | 🗺️ **Approximate map** | Leaflet + OpenStreetMap marker with an honest location radius |
 | 🌍 **Geolocation** | Country, region, city, postal code, coordinates, continent, timezone, UTC offset |
 | 🏢 **ISP & ASN intelligence** | ISP, organization, ASN, ASN organization, network range / CIDR |
@@ -45,6 +50,22 @@ Most IP checkers stop at “your IP is …”. **IP Intelligence** goes further:
 | 🧰 **Tools page** | IPv4/IPv6 validators, DNS lookup, reverse DNS, ASN lookup, RDAP and IP-range tools |
 | 🕘 **Local history** | Recent lookups saved in `localStorage` — no account, no server copy |
 | 🎨 **Modern UI** | Dark/light mode, glassmorphism, neon accents, skeleton loaders, toasts, responsive layout |
+
+## 🧩 Phase 1–3 Modules
+
+### Phase 1 — Advanced IP Intelligence Dashboard
+Automatic IPv4/IPv6 detection with copy + refresh, comprehensive lookup (basic info, geolocation with country flag, ISP/ASN/network range, security indicators), Leaflet/OpenStreetMap map, two-IP comparison with highlighted differences, and localStorage history.
+
+### Phase 2 — Privacy & Leak Test
+WebRTC ICE-candidate inspection (mDNS candidates are reported as masks, never as IPs), a browser-triggered DNS resolver diagnostic, IPv4/IPv6 connectivity, VPN/proxy/Tor/hosting indicators labelled Detected / Not Detected / Unknown / Inconclusive, and IP-vs-browser timezone/language consistency. Each test card shows status, result, explanation, technical details, and a recommendation.
+
+The DNS diagnostic uses the EDNS test endpoint at `edns.ip-api.com`: when the browser resolves that hostname, the authoritative server reports which recursive resolver actually asked. A browser cannot observe all system DNS traffic, so this measures the resolver path for normal browser lookups. A self-hosted authoritative DNS endpoint would be required for multi-resolver authoritative logging.
+
+### Phase 3 — Browser Fingerprint Lab
+Browser, screen, and hardware signals plus local Canvas, WebGL, and AudioContext fingerprint demonstrations and a Permissions API overview. All fingerprint tests run in the visitor's browser and are never transmitted. No microphone, camera, or precise location is ever activated.
+
+### Privacy Score
+Overall = weighted average of measured test scores (WebRTC ×3, DNS ×3, VPN/Proxy ×2, Consistency ×2, Fingerprint ×2, IPv6 ×1). Missing or inconclusive tests are excluded from the average. A visible public IP alone is neutral — it is how the internet routes replies back. A high score summarizes measured signals; it does not guarantee anonymity or security.
 
 ## 🧠 How it works
 
@@ -203,9 +224,14 @@ ip-intelligence/
 │   ├── layout.tsx
 │   └── page.tsx              # dashboard, results, tools, history, about
 ├── components/
-│   └── MapView.tsx           # Leaflet + OpenStreetMap, client-only
+│   ├── CompareIps.tsx        # two-IP side-by-side comparison
+│   ├── FingerprintLab.tsx    # Browser Fingerprint Lab (client-only)
+│   ├── MapView.tsx           # Leaflet + OpenStreetMap, client-only
+│   └── PrivacyTests.tsx      # Privacy & Leak Tests + score UI
 ├── lib/
+│   ├── browserTests.ts       # WebRTC/DNS/connectivity/fingerprint helpers
 │   ├── ip.ts                 # validation & classification
+│   ├── privacy.ts            # privacy test evaluation + score engine
 │   └── providers.ts          # provider normalization, cache, rate limiting
 ├── .env.example
 ├── next.config.mjs
@@ -243,6 +269,26 @@ vercel --prod
 | `npm start` | Start the production server |
 | `npm run typecheck` | Run TypeScript checks |
 | `npm run lint` | Run Next.js lint checks |
+
+## 🧪 Testing Report
+
+Verified locally against the production build:
+
+- TypeScript typecheck and Next.js production build pass.
+- IPv4 lookup: `8.8.8.8` → AS15169, reverse DNS `dns.google`, United States.
+- IPv6 lookup: `2606:4700:4700::1111` → AS13335, United States.
+- Invalid input `999.1.1.1` → HTTP 400.
+- Private `192.168.1.1` → local RFC1918 classification, no external lookup.
+- DNS A, RDAP, and ASN endpoints return live data.
+- Homepage renders the Compare, Privacy, and Fingerprint navigation.
+
+Browser-only tests (WebRTC, canvas, WebGL, audio, permissions) are implemented with standard web APIs and graceful unsupported-state handling; their results depend on the visitor's browser and cannot be meaningfully asserted from a server-side test.
+
+Features requiring additional keys or infrastructure:
+
+- AbuseIPDB abuse scoring: requires `ABUSEIPDB_API_KEY` (free tier).
+- ipinfo hostname/org enrichment: requires `IPINFO_TOKEN` (free tier).
+- Authoritative multi-resolver DNS leak logging: requires a self-hosted authoritative DNS test domain/endpoint; the built-in EDNS diagnostic covers the common single-resolver path.
 
 ## 🤝 Contributing
 

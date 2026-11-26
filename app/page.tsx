@@ -18,6 +18,7 @@ import {
   Moon,
   Network,
   Radar,
+  RefreshCw,
   Search,
   Server,
   Share2,
@@ -31,10 +32,14 @@ import {
 } from "lucide-react";
 import { classifyIp, flagEmoji, validationError } from "@/lib/ip";
 import type { IpIntel } from "@/lib/providers";
+import { detectConnectivity, type ConnectivityResult } from "@/lib/browserTests";
+import CompareIps from "@/components/CompareIps";
+import PrivacyTests from "@/components/PrivacyTests";
+import FingerprintLab from "@/components/FingerprintLab";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
-type View = "home" | "tools" | "history" | "about";
+type View = "home" | "compare" | "privacy" | "fingerprint" | "tools" | "history" | "about";
 
 interface HistoryEntry {
   ip: string;
@@ -75,6 +80,8 @@ export default function HomePage() {
   const [result, setResult] = useState<IpIntel | null>(null);
   const [myIp, setMyIp] = useState<IpIntel | null>(null);
   const [myIpError, setMyIpError] = useState<string | null>(null);
+  const [connectivity, setConnectivity] = useState<ConnectivityResult | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [rdap, setRdap] = useState<any>(null);
@@ -167,6 +174,7 @@ export default function HomePage() {
     } catch {}
 
     const shared = new URLSearchParams(window.location.search).get("ip");
+    detectConnectivity().then(setConnectivity).catch(() => {});
     (async () => {
       try {
         const mine = await api<IpIntel>("/api/myip");
@@ -187,6 +195,23 @@ export default function HomePage() {
     document.documentElement.classList.toggle("dark", dark);
     document.documentElement.classList.toggle("light", !dark);
   }, [dark]);
+
+  const refreshMyIp = async () => {
+    setRefreshing(true);
+    setMyIpError(null);
+    try {
+      const [mine, conn] = await Promise.all([api<IpIntel>("/api/myip"), detectConnectivity()]);
+      setMyIp(mine);
+      setConnectivity(conn);
+      setResult(mine);
+      runDiagnostics(mine);
+      showToast("Your IP detection refreshed");
+    } catch (e) {
+      setMyIpError(e instanceof Error ? e.message : "Could not detect your IP");
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const copyText = async (text: string, msg: string) => {
     try {
@@ -316,14 +341,17 @@ export default function HomePage() {
             </span>
           </button>
           <nav className="flex items-center gap-1 text-sm">
-            {(
-              [
-                ["home", "Lookup", Search],
-                ["tools", "Tools", Wrench],
-                ["history", "History", History],
-                ["about", "About", Info],
-              ] as const
-            ).map(([key, label, Icon]) => (
+              {(
+                [
+                  ["home", "Lookup", Search],
+                  ["compare", "Compare", Network],
+                  ["privacy", "Privacy", Shield],
+                  ["fingerprint", "Fingerprint", Fingerprint],
+                  ["tools", "Tools", Wrench],
+                  ["history", "History", History],
+                  ["about", "About", Info],
+                ] as const
+              ).map(([key, label, Icon]) => (
               <button
                 key={key}
                 onClick={() => setView(key)}
@@ -379,12 +407,24 @@ export default function HomePage() {
                   )}
                   {myIp && (
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                      {[myIp.city, myIp.country].filter(Boolean).join(", ") || NA} ·{" "}
+                      IPv{myIp.version} · {[myIp.city, myIp.country].filter(Boolean).join(", ") || NA} ·{" "}
                       {val(myIp.isp)}
                     </p>
                   )}
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {connectivity
+                      ? `IPv4: ${connectivity.ipv4Available ? connectivity.ipv4 : "Not detected"} · IPv6: ${connectivity.ipv6Available ? connectivity.ipv6 : "Not detected"}`
+                      : "Checking IPv4 / IPv6 connectivity…"}
+                  </p>
                 </div>
                 <div className="flex gap-2">
+                  <button
+                    onClick={refreshMyIp}
+                    disabled={refreshing}
+                    className="flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium disabled:opacity-40 dark:border-white/15"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} /> Refresh
+                  </button>
                   <button
                     onClick={() => myIp && copyText(myIp.ip, "Your IP copied")}
                     disabled={!myIp}
@@ -520,11 +560,13 @@ export default function HomePage() {
                     <Row k="IP Address" v={result.ip} mono />
                     <Row k="IP Version" v={`IPv${result.version}`} />
                     <Row k="IP Type" v={result.ipType} />
+                    <Row k="Hostname" v={val(result.hostname)} />
                     <Row
-                      k="Hostname / Reverse DNS"
-                      v={ptr?.records?.[0]?.value ?? result.hostname ?? NA}
+                      k="Reverse DNS"
+                      v={result.reverseDns ?? ptr?.records?.[0]?.value ?? NA}
                     />
-                    <Row k="ASN" v={val(result.asn)} />
+                    <Row k="ASN Number" v={val(result.asn)} />
+                    <Row k="ASN Organization" v={val(result.asnOrg)} />
                     <Row k="Organization" v={val(result.org)} />
                     <Row k="ISP" v={val(result.isp)} />
                     <Row k="Connection Type" v={val(result.connectionType)} />
@@ -532,6 +574,7 @@ export default function HomePage() {
 
                   <Card title="Geolocation" icon={<MapPin className="h-5 w-5 text-emerald-500" />}>
                     <Row k="Country" v={result.country ? `${flagEmoji(result.countryCode)} ${result.country}` : NA} />
+                    <Row k="Country Flag" v={result.countryCode ? flagEmoji(result.countryCode) : NA} />
                     <Row k="Country Code" v={val(result.countryCode)} />
                     <Row k="Region / State" v={val(result.region)} />
                     <Row k="City" v={val(result.city)} />
@@ -554,9 +597,20 @@ export default function HomePage() {
                       k="Network Range / CIDR"
                       v={rdap?.cidrs?.join(", ") || result.networkRange || NA}
                     />
+                    <Row k="Connection Type" v={val(result.connectionType)} />
                     <Row k="Hosting Provider" v={boolVal(result.hosting)} />
                     <Row k="Datacenter" v={boolVal(result.datacenter ?? result.hosting)} />
                     <Row k="Mobile Network" v={boolVal(result.mobile)} />
+                    <Row
+                      k="Hosting / Residential"
+                      v={
+                        result.hosting === true || result.datacenter === true
+                          ? "Hosting / Datacenter"
+                          : result.hosting === false
+                            ? "Residential (provider: non-hosting)"
+                            : NA
+                      }
+                    />
                     <Row k="Proxy" v={boolVal(result.proxy)} />
                     <Row k="VPN" v={boolVal(result.vpn)} />
                     <Row k="Tor Exit Node" v={boolVal(result.tor)} />
@@ -575,7 +629,7 @@ export default function HomePage() {
                                 : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300"
                           }`}
                         >
-                          {s.label}: {s.value === null ? NA : s.value ? "Detected" : "Not detected"}
+                          {s.label}: {s.value === null ? "Unknown" : s.value ? "Detected" : "Not Detected"}
                         </span>
                       ))}
                     </div>
@@ -775,6 +829,12 @@ export default function HomePage() {
           </>
         )}
 
+        {view === "compare" && <CompareIps myIp={myIp} />}
+
+        {view === "privacy" && <PrivacyTests intel={myIp ?? result} />}
+
+        {view === "fingerprint" && <FingerprintLab />}
+
         {view === "tools" && <ToolsView showToast={showToast} onLookup={lookup} />}
 
         {view === "history" && (
@@ -850,6 +910,8 @@ export default function HomePage() {
               <li>Reverse DNS, ASN registry lookup and DNS reachability testing</li>
               <li>VPN / proxy / Tor / hosting indicators and optional AbuseIPDB scoring</li>
               <li>Browser timezone and WebRTC leak-signal checks</li>
+              <li>IP comparison, Privacy &amp; Leak Tests with a transparent privacy score</li>
+              <li>Browser Fingerprint Lab (canvas, WebGL, audio, permissions — all local)</li>
             </ul>
             <h3 className="mt-6 font-semibold">Limitations</h3>
             <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-600 dark:text-slate-300">
