@@ -245,6 +245,10 @@ ip-intelligence/
 └── tsconfig.json
 ```
 
+## 📱 Flutter Mobile App
+
+The Flutter mobile app lives in [`mobile/`](mobile/) in this repository, alongside the website. It uses the same production APIs for My IP detection, IP lookup, VPN/proxy/Tor detection, and DNS/RDAP/ASN diagnostics on Android and iOS.
+
 ## 📱 Install as a Mobile App (PWA)
 
 IP Intelligence is an installable Progressive Web App. It works in any modern browser, and on mobile it can be installed to the home screen:
