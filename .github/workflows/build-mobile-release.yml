@@ -34,14 +34,14 @@ jobs:
       - name: Build release APK
         run: flutter build apk --release
       - name: Prepare release asset
-        run: cp build/app/outputs/flutter-apk/app-release.apk ip-intelligence-v1.0.0.apk
+        run: cp build/app/outputs/flutter-apk/app-release.apk ip-intelligence-v1.0.1.apk
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: mobile-v1.0.0
-          name: IP Intelligence Mobile v1.0.0
+          tag_name: mobile-v1.0.1
+          name: IP Intelligence Mobile v1.0.1
           body: |
             IP Intelligence mobile app for Android.
 
-            Download ip-intelligence-v1.0.0.apk and install it directly on your Android phone. Android may ask you to allow installation from your browser or file manager.
-          files: mobile/ip-intelligence-v1.0.0.apk
+            Download ip-intelligence-v1.0.1.apk and install it directly on your Android phone. Android may ask you to allow installation from your browser or file manager.
+          files: mobile/ip-intelligence-v1.0.1.apk
