@@ -71,19 +71,19 @@ Overall = weighted average of measured test scores (WebRTC ×3, DNS ×3, VPN/Pro
 
 ```mermaid
 flowchart LR
-  A[Visitor] --> B[Next.js dashboard]
-  B --> C[/api/myip]
-  B --> D[/api/lookup]
-  B --> E[/api/dns]
-  B --> F[/api/rdap]
-  B --> G[/api/asn]
-  D --> H[ipapi.co]
-  D --> I[ipwho.is]
-  E --> J[Cloudflare DNS-over-HTTPS]
-  F --> K[RDAP registries]
+  A["Visitor"] --> B["Next.js dashboard"]
+  B --> C["/api/myip"]
+  B --> D["/api/lookup"]
+  B --> E["/api/dns"]
+  B --> F["/api/rdap"]
+  B --> G["/api/asn"]
+  D --> H["ipapi.co"]
+  D --> I["ipwho.is"]
+  E --> J["Cloudflare DNS-over-HTTPS"]
+  F --> K["RDAP registries"]
   G --> K
-  D -. optional .-> L[AbuseIPDB]
-  D -. optional .-> M[ipinfo.io]
+  D -. optional .-> L["AbuseIPDB"]
+  D -. optional .-> M["ipinfo.io"]
 ```
 
 The backend normalizes provider responses into one clean schema, caches results for 5 minutes, rate-limits clients, and only contacts fixed provider hosts. User input is validated before use and is never treated as an arbitrary URL.
