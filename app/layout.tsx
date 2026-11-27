@@ -1,14 +1,25 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import PwaRegister from "@/components/PwaRegister";
+
+export const viewport: Viewport = {
+  themeColor: "#04122e",
+};
 
 export const metadata: Metadata = {
   title: "IP Intelligence — Understand Every IP. Explore Every Network.",
   description:
     "Look up any public IPv4 or IPv6 address: geolocation, ISP, ASN, network range, RDAP registration, DNS diagnostics and available security indicators.",
+  applicationName: "IP Intelligence",
+  appleWebApp: {
+    capable: true,
+    title: "IP Intelligence",
+    statusBarStyle: "black-translucent",
+  },
   icons: {
     icon: "/icon.svg",
     shortcut: "/icon.svg",
-    apple: "/icon.svg",
+    apple: "/pwa-icon/192",
   },
 };
 
@@ -22,7 +33,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <PwaRegister />
+        {children}
+      </body>
     </html>
   );
 }

@@ -37,6 +37,7 @@ import CompareIps from "@/components/CompareIps";
 import PrivacyTests from "@/components/PrivacyTests";
 import FingerprintLab from "@/components/FingerprintLab";
 import Logo from "@/components/Logo";
+import InstallApp from "@/components/InstallApp";
 import VpnProxyDetector from "@/components/VpnProxyDetector";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
@@ -376,6 +377,8 @@ export default function HomePage() {
           </nav>
         </div>
       </header>
+
+      <InstallApp />
 
       <main className="mx-auto max-w-6xl px-4 pb-20 pt-8">
         {view === "home" && (

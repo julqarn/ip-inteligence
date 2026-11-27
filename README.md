@@ -245,6 +245,15 @@ ip-intelligence/
 └── tsconfig.json
 ```
 
+## 📱 Install as a Mobile App (PWA)
+
+IP Intelligence is an installable Progressive Web App. It works in any modern browser, and on mobile it can be installed to the home screen:
+
+- **Android (Chrome):** open the site, then tap **Install app** (or Chrome menu → **Install app**).
+- **iPhone / iPad (Safari):** open the site, tap **Share**, then **Add to Home Screen**.
+
+The installed app opens full-screen with the IP Intelligence icon. Live IP lookups still need an internet connection; the service worker caches the app shell and shows an offline page when the network is unavailable. API responses are never cached.
+
 ## 🚢 Deploy to Vercel
 
 Use the deploy button above, or import the repository manually:
