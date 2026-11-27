@@ -123,7 +123,10 @@ cp .env.example .env.local
 | Variable | Required | Purpose |
 |---|---:|---|
 | `ABUSEIPDB_API_KEY` | No | Enables abuse score, report counts and blacklist-style reputation data |
-| `IPINFO_TOKEN` | No | Enables extra hostname / organization enrichment |
+| `IPINFO_TOKEN` | No | Enables extra hostname / organization enrichment and ipinfo privacy signals where the plan includes them |
+| `IPQUALITYSCORE_API_KEY` | No | Enables IPQualityScore VPN/proxy/Tor and fraud-score signals |
+| `IP2LOCATION_API_KEY` | No | Enables IP2Location proxy-type and usage-type signals |
+| `ABSTRACT_API_KEY` | No | Enables Abstract VPN/proxy/Tor/hosting security signals |
 
 Get keys:
 
@@ -152,6 +155,7 @@ All endpoints return JSON in one of these shapes:
 | `GET /api/dns?name=8.8.8.8&type=PTR` | Reverse DNS for an IP address |
 | `GET /api/rdap?ip=8.8.8.8` | RDAP registration and network range |
 | `GET /api/asn?asn=AS15169` | Autonomous-system registry record |
+| `GET /api/anonymity?ip=8.8.8.8` | VPN/proxy/Tor/hosting detection report with signals, confidence and sources |
 
 Example:
 
@@ -269,6 +273,21 @@ vercel --prod
 | `npm start` | Start the production server |
 | `npm run typecheck` | Run TypeScript checks |
 | `npm run lint` | Run Next.js lint checks |
+
+## 🛡️ VPN, Proxy & Anonymity Detection
+
+The detector combines named signals instead of guessing:
+
+- **Tor:** the Tor Project bulk exit list is authoritative (cached 1 hour). IPv6 Tor status falls back to provider indicators because the bulk list is IPv4-focused.
+- **VPN/Proxy:** ipwho.is security indicators by default, plus optional ipinfo privacy, IPQualityScore, IP2Location, and Abstract signals when keys are configured. Known VPN provider ownership (NordVPN, ExpressVPN, Surfshark, Proton VPN, Mullvad, CyberGhost, PIA, …) is labelled as inference and only yields **Likely** without database confirmation.
+- **Hosting/Datacenter:** provider hosting flags plus ASN/organization ownership (AWS, Google Cloud, Azure, DigitalOcean, OVHcloud, Hetzner, Vultr, Oracle Cloud, …). A hosting IP is never classified as a VPN on that basis alone.
+- **Residential/Mobile/Corporate:** classified only with supporting evidence (non-hosting reports, provider usage types); otherwise **Unknown**.
+- **Proxy subtypes** (HTTP/HTTPS/SOCKS/transparent/anonymous/elite): reported only when a provider classifies them; otherwise **Unknown**, because subtype requires proxied-request header inspection.
+- **Disagreements** between sources produce **Inconclusive** and are listed explicitly.
+- **Reputation risk** (AbuseIPDB / IPQualityScore fraud score) is kept separate from classification confidence: VPN use is not malicious, and a residential IP is not automatically trustworthy.
+- **Compare My Connection** stores a before-VPN snapshot locally, then compares IP, country, ISP, ASN, network type, VPN/proxy status, DNS resolver, and IPv4/IPv6 after reconnecting, flagging potential DNS/IPv6 leaks.
+
+Works without paid APIs: Tor exit detection, ipwho.is indicators, ownership analysis, confidence/disagreement handling, and connection comparison. Optional keys add IPQualityScore, IP2Location, Abstract, ipinfo privacy, and AbuseIPDB reputation data.
 
 ## 🧪 Testing Report
 

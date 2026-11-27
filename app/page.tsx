@@ -36,10 +36,11 @@ import { detectConnectivity, type ConnectivityResult } from "@/lib/browserTests"
 import CompareIps from "@/components/CompareIps";
 import PrivacyTests from "@/components/PrivacyTests";
 import FingerprintLab from "@/components/FingerprintLab";
+import VpnProxyDetector from "@/components/VpnProxyDetector";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
-type View = "home" | "compare" | "privacy" | "fingerprint" | "tools" | "history" | "about";
+type View = "home" | "compare" | "privacy" | "vpn" | "fingerprint" | "tools" | "history" | "about";
 
 interface HistoryEntry {
   ip: string;
@@ -346,8 +347,9 @@ export default function HomePage() {
                   ["home", "Lookup", Search],
                   ["compare", "Compare", Network],
                   ["privacy", "Privacy", Shield],
+                  ["vpn", "VPN Detector", ShieldCheck],
                   ["fingerprint", "Fingerprint", Fingerprint],
-                  ["tools", "Tools", Wrench],
+                  ["tools", "Diagnostics", Wrench],
                   ["history", "History", History],
                   ["about", "About", Info],
                 ] as const
@@ -832,6 +834,8 @@ export default function HomePage() {
         {view === "compare" && <CompareIps myIp={myIp} />}
 
         {view === "privacy" && <PrivacyTests intel={myIp ?? result} />}
+
+        {view === "vpn" && <VpnProxyDetector myIp={myIp} showToast={showToast} />}
 
         {view === "fingerprint" && <FingerprintLab />}
 
