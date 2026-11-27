@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -256,9 +258,14 @@ class _HomePageState extends State<HomePage> {
               ),
               if (intel['latitude'] != null && intel['longitude'] != null)
                 OutlinedButton(
-                  onPressed: () => launchUrl(
-                    Uri.parse('https://www.openstreetmap.org/?mlat=${intel['latitude']}&mlon=${intel['longitude']}#map=10/${intel['latitude']}/${intel['longitude']}'),
-                    mode: LaunchMode.externalApplication,
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => MapPage(
+                        latitude: (intel['latitude'] as num).toDouble(),
+                        longitude: (intel['longitude'] as num).toDouble(),
+                        label: '${textValue(intel['city'])}, ${textValue(intel['country'])}',
+                      ),
+                    ),
                   ),
                   child: const Text('Map'),
                 ),
@@ -271,6 +278,12 @@ class _HomePageState extends State<HomePage> {
             _row('Postal code', textValue(intel['postal'])),
             _row('Continent', textValue(intel['continent'])),
             _row('Coordinates', intel['latitude'] == null ? 'Not Available' : '${intel['latitude']}, ${intel['longitude']}'),
+            if (intel['latitude'] != null && intel['longitude'] != null)
+              _mapPreview(
+                (intel['latitude'] as num).toDouble(),
+                (intel['longitude'] as num).toDouble(),
+                '${textValue(intel['city'])}, ${textValue(intel['country'])}',
+              ),
             _row('Timezone', '${textValue(intel['timezone'])} (${textValue(intel['utcOffset'])})'),
             const Text('IP geolocation is approximate and never shows an exact address or live location.'),
           ]),
@@ -433,6 +446,30 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Widget _mapPreview(double latitude, double longitude, String label) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          height: 240,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: buildIpMap(latitude, longitude),
+          ),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton(
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => MapPage(latitude: latitude, longitude: longitude, label: label),
+            ),
+          ),
+          child: const Text('Open full-screen map'),
+        ),
+      ],
+    );
+  }
+
   Widget _detectionCard(JsonMap detection) {
     final sources = ((detection['sources'] as List?) ?? []).join(', ');
     return _card(textValue(detection['label']), [
@@ -478,6 +515,107 @@ class _HomePageState extends State<HomePage> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(color: const Color(0xFF2A0F1C), borderRadius: BorderRadius.circular(12)),
       child: Text(message, style: const TextStyle(color: Color(0xFFFDA4AF))),
+    );
+  }
+}
+
+Widget buildIpMap(double latitude, double longitude, {MapController? controller}) {
+  final point = LatLng(latitude, longitude);
+  return FlutterMap(
+    mapController: controller,
+    options: MapOptions(initialCenter: point, initialZoom: 10),
+    children: [
+      TileLayer(
+        urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        userAgentPackageName: 'com.julqarn.ip_intelligence',
+      ),
+      CircleLayer(
+        circles: [
+          CircleMarker(
+            point: point,
+            radius: 5000,
+            useRadiusInMeter: true,
+            color: const Color(0x3322D3EE),
+            borderColor: const Color(0xFF22D3EE),
+            borderStrokeWidth: 2,
+          ),
+        ],
+      ),
+      MarkerLayer(
+        markers: [
+          Marker(
+            point: point,
+            width: 44,
+            height: 44,
+            child: const Icon(Icons.location_on, color: Color(0xFF34F5A2), size: 40),
+          ),
+        ],
+      ),
+      const RichAttributionWidget(
+        attributions: [TextSourceAttribution('OpenStreetMap contributors')],
+      ),
+    ],
+  );
+}
+
+class MapPage extends StatefulWidget {
+  const MapPage({super.key, required this.latitude, required this.longitude, required this.label});
+
+  final double latitude;
+  final double longitude;
+  final String label;
+
+  @override
+  State<MapPage> createState() => _MapPageState();
+}
+
+class _MapPageState extends State<MapPage> {
+  final _controller = MapController();
+
+  void _zoom(double delta) {
+    final camera = _controller.camera;
+    _controller.move(camera.center, camera.zoom + delta);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.label)),
+      body: Stack(
+        children: [
+          buildIpMap(widget.latitude, widget.longitude, controller: _controller),
+          Positioned(
+            right: 16,
+            bottom: 96,
+            child: Column(
+              children: [
+                FloatingActionButton.small(
+                  heroTag: 'zoom-in',
+                  onPressed: () => _zoom(1),
+                  child: const Icon(Icons.add),
+                ),
+                const SizedBox(height: 8),
+                FloatingActionButton.small(
+                  heroTag: 'zoom-out',
+                  onPressed: () => _zoom(-1),
+                  child: const Icon(Icons.remove),
+                ),
+              ],
+            ),
+          ),
+          const Positioned(
+            left: 16,
+            right: 16,
+            bottom: 16,
+            child: Card(
+              child: Padding(
+                padding: EdgeInsets.all(12),
+                child: Text('Approximate IP location. This is not an exact address or live device location.'),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
