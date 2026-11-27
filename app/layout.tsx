@@ -5,6 +5,11 @@ export const metadata: Metadata = {
   title: "IP Intelligence — Understand Every IP. Explore Every Network.",
   description:
     "Look up any public IPv4 or IPv6 address: geolocation, ISP, ASN, network range, RDAP registration, DNS diagnostics and available security indicators.",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

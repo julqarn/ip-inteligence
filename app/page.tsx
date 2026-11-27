@@ -36,6 +36,7 @@ import { detectConnectivity, type ConnectivityResult } from "@/lib/browserTests"
 import CompareIps from "@/components/CompareIps";
 import PrivacyTests from "@/components/PrivacyTests";
 import FingerprintLab from "@/components/FingerprintLab";
+import Logo from "@/components/Logo";
 import VpnProxyDetector from "@/components/VpnProxyDetector";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
@@ -329,9 +330,7 @@ export default function HomePage() {
             className="flex items-center gap-2 text-left"
             aria-label="IP Intelligence home"
           >
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-500 text-slate-950">
-              <Radar className="h-5 w-5" />
-            </span>
+            <Logo className="h-9 w-9 shrink-0" />
             <span>
               <span className="block text-base font-extrabold leading-tight">
                 IP <span className="neon-text">Intelligence</span>
