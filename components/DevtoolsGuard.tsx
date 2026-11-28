@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 export default function DevtoolsGuard() {
-  const [devtoolsOpen, setDevtoolsOpen] = useState(false);
-
   useEffect(() => {
     const blockContextMenu = (event: MouseEvent) => {
       event.preventDefault();
@@ -26,7 +24,9 @@ export default function DevtoolsGuard() {
     const detectDevtools = () => {
       const widthGap = window.outerWidth - window.innerWidth;
       const heightGap = window.outerHeight - window.innerHeight;
-      setDevtoolsOpen(widthGap > 170 || heightGap > 170);
+      if (widthGap > 170 || heightGap > 170) {
+        window.location.replace("/caught.html");
+      }
     };
 
     document.addEventListener("contextmenu", blockContextMenu);
@@ -43,20 +43,5 @@ export default function DevtoolsGuard() {
     };
   }, []);
 
-  if (!devtoolsOpen) return null;
-
-  return (
-    <div
-      role="alertdialog"
-      aria-label="Developer tools disabled"
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#04122e] px-6 text-center text-white"
-    >
-      <div className="max-w-md">
-        <h1 className="text-2xl font-bold">Developer tools are disabled</h1>
-        <p className="mt-3 text-sm text-white/70">
-          Please close the browser developer tools to continue using IP Intelligence.
-        </p>
-      </div>
-    </div>
-  );
+  return null;
 }
