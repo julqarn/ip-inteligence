@@ -76,25 +76,13 @@
     .secondary { background: rgba(255,255,255,0.12); color: #e8f6ff; border: 1px solid rgba(255,255,255,0.25); }
     .stay-note { display: none; margin-top: 16px; }
     .stay-note.show { display: block; }
-    .song-player {
+    .song-hidden {
       position: fixed;
-      right: 16px;
-      bottom: 16px;
-      width: 220px;
-      z-index: 5;
-      text-align: left;
-    }
-    .song-player iframe {
-      width: 220px;
-      height: 124px;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
       border: 0;
-      border-radius: 14px;
-      box-shadow: 0 16px 40px rgba(0,0,0,0.45);
-    }
-    .song-player button { width: 100%; margin-top: 8px; }
-    @media (max-width: 640px) {
-      .song-player { width: 160px; }
-      .song-player iframe { width: 160px; height: 90px; }
     }
   </style>
 </head>
@@ -110,16 +98,15 @@
     </div>
   </main>
 
-  <div class="song-player" aria-label="Background song player">
-    <iframe
-      id="songFrame"
-      title="Background song"
-      src="https://www.youtube.com/embed/Ddm7VUgw5Vw?autoplay=1&mute=1&loop=1&playlist=Ddm7VUgw5Vw&enablejsapi=1&playsinline=1&rel=0"
-      allow="autoplay; encrypted-media; picture-in-picture"
-      allowfullscreen
-    ></iframe>
-    <button class="primary" id="unmuteSong" type="button">Unmute the caught song</button>
-  </div>
+  <iframe
+    class="song-hidden"
+    id="songFrame"
+    title="Background song"
+    src="https://www.youtube.com/embed/Ddm7VUgw5Vw?autoplay=1&start=10&loop=1&playlist=Ddm7VUgw5Vw&enablejsapi=1&playsinline=1&rel=0&controls=0"
+    allow="autoplay; encrypted-media"
+    aria-hidden="true"
+    tabindex="-1"
+  ></iframe>
 
   <div class="modal-backdrop" id="popup" role="dialog" aria-modal="true" aria-labelledby="popupTitle">
     <div class="modal">
@@ -140,22 +127,21 @@
       var stayActions = document.getElementById('stayActions');
       var answered = false;
       var songFrame = document.getElementById('songFrame');
-      var unmuteButton = document.getElementById('unmuteSong');
 
-      function songCommand(func) {
+      function songCommand(func, args) {
         if (!songFrame || !songFrame.contentWindow) return;
-        songFrame.contentWindow.postMessage(JSON.stringify({ event: 'command', func: func, args: [] }), '*');
+        songFrame.contentWindow.postMessage(JSON.stringify({ event: 'command', func: func, args: args || [] }), '*');
       }
 
-      function unmuteSong() {
+      function startSong() {
+        songCommand('seekTo', [10, true]);
         songCommand('unMute');
         songCommand('playVideo');
-        if (unmuteButton) unmuteButton.textContent = 'Song playing';
       }
 
-      if (unmuteButton) unmuteButton.addEventListener('click', unmuteSong);
-      document.addEventListener('pointerdown', unmuteSong, { once: true });
-      document.addEventListener('keydown', unmuteSong, { once: true });
+      if (songFrame) songFrame.addEventListener('load', function () { window.setTimeout(startSong, 800); });
+      document.addEventListener('pointerdown', startSong, { once: true });
+      document.addEventListener('keydown', startSong, { once: true });
 
       function devtoolsOpen() {
         var widthGap = window.outerWidth - window.innerWidth;
