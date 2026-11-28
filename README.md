@@ -11,14 +11,18 @@ A modern, real-time IP lookup and network diagnostics platform — instant publi
 ![Next.js](https://img.shields.io/badge/Next.js-15-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
-![Leaflet](https://img.shields.io/badge/Leaflet-OpenStreetMap-199900?style=for-the-badge&logo=leaflet&logoColor=white)
+![Flutter](https://img.shields.io/badge/Flutter-Mobile_App-02569B?style=for-the-badge&logo=flutter&logoColor=white)
+![License: MIT](https://img.shields.io/badge/License-MIT-34F5A2?style=for-the-badge)
+
+<br />
+
+**[🌐 Live Demo](https://ip-intelligence-pi.vercel.app) · [📱 Android App](https://github.com/julqarn/ip-inteligence/releases/tag/mobile-v1.0.1) · [⬇️ Download APK](https://github.com/julqarn/ip-inteligence/releases/download/mobile-v1.0.1/ip-intelligence-v1.0.1.apk)**
 
 <br />
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fjulqarn%2Fip-inteligence)
 
-**[Features](#-features) · [Quick Start](#-quick-start) · [API](#-api-reference) · [Providers](#-data-providers) · [Deploy](#-deploy-to-vercel) · [Privacy](#-privacy--honesty)**
+**[Features](#-features) · [Quick Start](#-quick-start) · [API](#-api-reference) · [Mobile App](#-flutter-mobile-app) · [Providers](#-data-providers) · [Deploy](#-deploy-to-vercel) · [Privacy](#-privacy--honesty)**
 
 </div>
 
@@ -247,16 +251,24 @@ ip-intelligence/
 
 ## 📱 Flutter Mobile App
 
-The Flutter mobile app lives in [`mobile/`](mobile/) in this repository, alongside the website. It uses the same production APIs for My IP detection, IP lookup, VPN/proxy/Tor detection, and DNS/RDAP/ASN diagnostics on Android and iOS.
+IP Intelligence also ships as a proper native mobile app built with Flutter. The source lives in [`mobile/`](mobile/) in this repository, alongside the website, and uses the same production APIs for My IP detection, IP lookup, VPN/proxy/Tor detection, and DNS/RDAP/ASN diagnostics. The map is integrated inside the app — no browser needed.
 
-## 📱 Install as a Mobile App (PWA)
+**Android — install directly from GitHub Releases:**
 
-IP Intelligence is an installable Progressive Web App. It works in any modern browser, and on mobile it can be installed to the home screen:
+- Latest release: [IP Intelligence Mobile v1.0.1](https://github.com/julqarn/ip-inteligence/releases/tag/mobile-v1.0.1)
+- Direct download: [ip-intelligence-v1.0.1.apk](https://github.com/julqarn/ip-inteligence/releases/download/mobile-v1.0.1/ip-intelligence-v1.0.1.apk)
 
-- **Android (Chrome):** open the site, then tap **Install app** (or Chrome menu → **Install app**).
-- **iPhone / iPad (Safari):** open the site, tap **Share**, then **Add to Home Screen**.
+Download the APK on your phone and open it to install. Android may ask you to allow installation from your browser or file manager.
 
-The installed app opens full-screen with the IP Intelligence icon. Live IP lookups still need an internet connection; the service worker caches the app shell and shows an offline page when the network is unavailable. API responses are never cached.
+**Build it yourself:**
+
+```bash
+cd mobile
+flutter pub get
+flutter run
+```
+
+> Note: the repository copy of `mobile/` does not include binary platform files (launcher icons, Gradle wrapper). After cloning, run `flutter create --platforms=android,ios .` once inside `mobile/` to regenerate them.
 
 ## 🚢 Deploy to Vercel
 
@@ -324,7 +336,7 @@ Features requiring additional keys or infrastructure:
 
 ## 🤝 Contributing
 
-Issues and pull requests are welcome. Please keep changes aligned with the project’s core rule: **real data only — never fabricate lookup results, locations, or security verdicts.**
+Issues and pull requests are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for setup and guidelines, [SECURITY.md](SECURITY.md) for reporting vulnerabilities, and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community standards. Please keep changes aligned with the project’s core rule: **real data only — never fabricate lookup results, locations, or security verdicts.**
 
 Good first contributions:
 
@@ -335,7 +347,7 @@ Good first contributions:
 
 ## 📄 License
 
-MIT — use, modify and deploy freely.
+This project is licensed under the [MIT License](LICENSE) — use, modify and deploy freely.
 
 Map data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors.
 
